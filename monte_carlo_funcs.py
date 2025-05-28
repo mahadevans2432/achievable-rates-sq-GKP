@@ -18,7 +18,7 @@ def estimate_Z_Wi_bit_flip(N, p, samples):
     log_Z_Wi_list = logaddexp_array(-LLRs/2)
     return np.exp(log_Z_Wi_list).flatten()/samples
 
-# Z(Wi) calculation for qudits 
+# Z(Wi) calculation for dit channels 
 def estimate_Z_Wi_dit_flip(N, p, samples):
     """
     N: code-length
@@ -34,68 +34,6 @@ def estimate_Z_Wi_dit_flip(N, p, samples):
     obj.sc_decode(L_in)
     log_Z_Wi_list = scipy.special.logsumexp(scipy.special.logsumexp(-obj.LLRs/2,axis=2),axis=0)
     return np.exp(log_Z_Wi_list).flatten()/(samples*(d-1))
-
-def estimate_Z_Wi_pauli(N, p_uv, samples):
-    ###Something is wrong with the phase part FIX IT!!!
-    """
-    N: code-length
-    p_uv: array with 4 entries for probability distribution of bit and phase flips in order [p_00,p_01,p_10,p_11]
-    samples: no. of runs for monte-carlo sampling
-    """
-    tol = 1e-30
-    obj = cl_polar_parallel(N,[],samples)
-    
-    pu = p_uv[2]+p_uv[3]
-    p0v = p_uv[1]/(p_uv[1]+p_uv[0]+tol)
-    p1v = p_uv[3]/(p_uv[3]+p_uv[2]+tol)
-
-    L0 = np.log((1-p0v)/(p0v+tol))
-    L1 = np.log((1-p1v)/(p1v+tol))
-    u = np.random.binomial(1,pu,(N,samples)) #Bit error
-    v = np.random.binomial(1,p0v*(1-u)+p1v*u,(N,samples)) #Phase error
-    
-    Lu = (1-2*u)*np.log((1-pu)/pu)
-    Lv = (1-2*v)*(L0*(1-u) + L1*u)
-        
-    obj.sc_decode(Lu)
-    log_Z_Wi_list_bit = logaddexp_array(-obj.LLRs/2)
-
-    obj.sc_decode(Lv)
-    log_Z_Wi_list_phase = logaddexp_array(-np.flip(obj.LLRs/2,axis=0))
-
-    return np.exp(log_Z_Wi_list_bit).flatten()/samples, np.exp(log_Z_Wi_list_phase).flatten()/samples
-
-
-def pauli_polar_MC_error(polar_bit, polar_phase, p_uv, samples):
-    """
-    polar_bit: cl_polar_parallel object with bits frozen in set A and no. of samples set
-    polar_phase: cl_polar_parallel object with bits frozen in set P and no. of samples set
-    p_uv: array with 4 entries for probability distribution of bit and phase flips in order [p_00,p_01,p_10,p_11]
-    samples: no. of runs for monte-carlo sampling
-    """
-    tol = 1e-30
-    N = polar_bit.N
-    
-    pu = p_uv[2]+p_uv[3]
-    p0v = p_uv[1]/(p_uv[1]+p_uv[0]+tol)
-    p1v = p_uv[3]/(p_uv[3]+p_uv[2]+tol)
-
-    L0 = np.log((1-p0v)/(p0v+tol))
-    L1 = np.log((1-p1v)/(p1v+tol))
-    u = np.random.binomial(1,pu,(N,samples)) #Bit error
-    v = np.random.binomial(1,p0v*(1-u)+p1v*u,(N,samples)) #Phase error
-
-    Lu = np.log((1-pu)/pu)*np.ones(u.shape)
-    u_hat = polar_bit.sc_decode(Lu)
-    Lv = np.flip((1-u_hat)*L0 + (u_hat)*L1)
-    v_hat = np.flip(polar_phase.sc_decode(Lv))
-
-    avg_u_diff  = np.sum(np.sum((u_hat + u)%2,axis=0))/samples
-    avg_v_diff = np.sum(np.sum((v_hat + v)%2,axis=0))/samples
-    avg_error_count = np.sum(np.minimum(1,np.sum((u_hat + u)%2,axis=0) + np.sum((v_hat + v)%2,axis=0)))/samples
-    
-    return avg_error_count, avg_u_diff, avg_v_diff
-
 
 def estimate_Z_Wi_displ_sqGKP(N, sig, samples):
     """
