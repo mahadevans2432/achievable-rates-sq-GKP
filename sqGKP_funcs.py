@@ -1,5 +1,5 @@
-import numpy as np # type: ignore
-import scipy # type: ignore
+import numpy as np
+import scipy
 
 #Square GKP functions
 def pu(k1, sig, u=1, d=2, l_cutoff=8):

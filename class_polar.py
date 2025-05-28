@@ -1,5 +1,5 @@
-import numpy as np # type: ignore
-import scipy # type: ignore
+import numpy as np
+import scipy
 
 def f_dit_alpha(L1,L2,alpha):
     """
@@ -21,6 +21,7 @@ def g_dit_alpha(L1,L2,u,alpha):
     Lg = L2 - L1[u[np.newaxis, :, :], np.arange(N)[:, None], np.arange(samples)] + L1[u_shifted, np.arange(N)[:, None], np.arange(samples)]
     return Lg
 
+bit = np.vectorize(lambda L: (int(L<0)))
 dit = lambda L: (np.argmin(L[1:],axis=0) + 1)*bit(np.amin(L[1:],axis=0))
 
 
