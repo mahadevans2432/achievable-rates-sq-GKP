@@ -1,7 +1,7 @@
 import numpy as np # type: ignore
 import scipy # type: ignore
 
-#Error analysis for simple displacement channel
+#Square GKP functions
 def pu(k1, sig, u=1, d=2, l_cutoff=8):
     all_index = np.array(range(-l_cutoff*d, l_cutoff*d + 1))
     u_list = np.array(range(-l_cutoff*d + u, l_cutoff*d + 1, d))
