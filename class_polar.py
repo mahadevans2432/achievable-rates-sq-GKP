@@ -15,7 +15,7 @@ def f_dit(L1,L2):
     return num - denoms
 def g_dit(L1,L2,u):
     d,N,samples = L1.shape
-    u = np.astype(u,int)
+    u = u.astype(int)
     k_vals = np.arange(d).reshape(d, 1, 1)  # Shape (d, 1, 1) for broadcasting
     u_shifted = (u[np.newaxis, :, :] + k_vals) % d  # Shape (d, N, samples)
     Lg = L2 - L1[u[np.newaxis, :, :], np.arange(N)[:, None], np.arange(samples)] + L1[u_shifted, np.arange(N)[:, None], np.arange(samples)]
@@ -34,7 +34,7 @@ def f_dit_alpha(L1,L2,alpha):
     return num - denoms
 def g_dit_alpha(L1,L2,u,alpha):
     d,N,samples = L1.shape
-    u = np.astype(u,int)
+    u = u.astype(int)
     k_vals = np.array([(alpha*i)%d for i in range(d)]).reshape(d, 1, 1)  # Shape (d, 1, 1) for broadcasting
     u_shifted = (u[np.newaxis, :, :] + k_vals) % d  # Shape (d, N, samples)
     Lg = L2 - L1[u[np.newaxis, :, :], np.arange(N)[:, None], np.arange(samples)] + L1[u_shifted, np.arange(N)[:, None], np.arange(samples)]

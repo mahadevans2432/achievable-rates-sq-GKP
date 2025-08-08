@@ -339,3 +339,54 @@ def no_analog_dGKP_polar_MC_error(polar_amp, polar_phase, sig, samples):
     avg_error_count = np.sum(np.minimum(1,np.sum((u_hat - u)%d,axis=0) + np.sum((v_hat - v)%d,axis=0)))/samples
     
     return avg_error_count, avg_u_diff, avg_v_diff
+
+def estimate_Z_Wi_displ_sq_dGKP_all(d, N, sig, samples,alpha=1):
+    """
+    d: qudit dimension
+    N: code-length
+    sig: displacement noise
+    samples: no. of runs for monte-carlo sampling
+    """
+    obj = cl_polar_dit_alpha(d,N,[],samples,alpha)
+    
+    x_error = np.random.normal(0,sig,(N,samples))
+    u = np.array(np.rint(x_error/np.sqrt(2*np.pi/d))%d,dtype=int)
+        
+    k1 = np.mod(x_error/np.sqrt(2*np.pi),np.sqrt(1/d))
+    k1[k1>=np.sqrt(1/(4*d))] -= np.sqrt(1/d)
+
+    Lu = np.zeros((d,N,samples))
+    for i in range(N):
+        for j in range(samples):
+            Lu[:,i,j] = pu_belief(k1[i,j],sig,u[i,j],d)
+
+    obj.sc_decode(Lu)
+    logZ_Wi_list_X = scipy.special.logsumexp(-obj.LLRs/2,axis=-1)
+
+    return np.concatenate((np.ones((1,N),dtype=logZ_Wi_list_X.dtype),(np.exp(logZ_Wi_list_X))/(samples)))
+
+def estimate_sq_dGKP_err(d, N, A, sig, samples, alpha=1):
+    """
+    d: qudit dimension
+    N: code-length
+    A: information set
+    sig: displacement noise
+    samples: no. of runs for monte-carlo sampling
+    """
+    obj = cl_polar_dit_alpha(d,N,A,samples,alpha)
+    
+    x_error = np.random.normal(0,sig,(N,samples))
+    u = np.array(np.rint(x_error/np.sqrt(2*np.pi/d))%d,dtype=int)
+        
+    k1 = np.mod(x_error/np.sqrt(2*np.pi),np.sqrt(1/d))
+    k1[k1>=np.sqrt(1/(4*d))] -= np.sqrt(1/d)
+
+    Lu = np.zeros((d,N,samples))
+    for i in range(N):
+        for j in range(samples):
+            Lu[:,i,j] = pu_belief(k1[i,j],sig,u[i,j],d)
+
+    output = obj.sc_decode(Lu)
+    err_counts = np.sum(np.sum(output,axis=0) > 0)
+
+    return err_counts/samples
